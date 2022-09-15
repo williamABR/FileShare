@@ -74,6 +74,13 @@
       <div class="card cardFiles">
         <div class="card-body">
           <ul class="list-group list-group-flush" :key="actualizar">
+            <h1>
+              {{
+                files.length
+                  ? ""
+                  : "Cargando archivos..."
+              }}
+            </h1>
             <li v-for="item in files" :key="item.id">
               <a :href="'http://localhost:8080/file/' + item.fileName">
                 {{ item.fileName }}
@@ -113,13 +120,14 @@ export default {
     async subscribir() {
       const selectAux = document.getElementById("selectChannel1");
       const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-      var obj = {"idUser":this.getCookie("userId"),"channel":selectAux.value}
+      var obj = { idUser: this.getCookie("userId"), channel: selectAux.value };
       this.posts = await axios
-        .post("http://localhost:8080/subscription", obj, {headers})
+        .post("http://localhost:8080/subscription", obj, { headers })
         .then((response) => {
-          for (var i = 0; i < response.length; i++){
-          this.files.push = response[i]
+          for (var i = 0; i < response.length; i++) {
+            this.files.push = response[i];
           }
+          window.alert("Te haz subscrito con exito al " + selectAux.value);
         })
         .catch((error) => {
           this.errorMessage = error.message;
@@ -142,7 +150,7 @@ export default {
           };
           this.files.push(objectFile);
           this.actualizar += 1;
-          console.log(this.files);
+          window.alert("El archivo se aguardado correctamente");
         })
         .catch((error) => {
           this.errorMessage = error.message;
@@ -182,16 +190,32 @@ export default {
       }
     },
     async checkFiles() {
-      var sizeFile = true
+      var sizeFile = true;
       if (this.files.length === 0) {
-        sizeFile = true
-      }else{
-        sizeFile = false
+        sizeFile = true;
+      } else {
+        sizeFile = false;
       }
+      console.log("tamaño de array:" + sizeFile);
+      const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+      var obj = { isFile: sizeFile };
       await axios
-        .post('http://localhost:8080/checkUpdate/'+this.getCookie("userId"), sizeFile)
+        .post(
+          "http://localhost:8080/checkUpdate/" + this.getCookie("userId"),
+          obj,
+          { headers }
+        )
         .then((response) => {
           console.log(response);
+          for (const property in response.data) {
+            var objectFile = {
+              canal: response.data[property],
+              fileName: property,
+            };
+            this.files.push(objectFile);
+          }
+          this.actualizar += 1;
+          console.log(this.files.length);
         })
         .catch((error) => {
           this.errorMessage = error.message;
@@ -200,7 +224,7 @@ export default {
     },
   },
   cron: {
-    time: 1000,
+    time: 10000,
     method: "checkFiles",
   },
 };

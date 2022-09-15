@@ -131,7 +131,18 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fmt.Println("id is missing in parameters")
 	}
-	fmt.Println(id)
+	//fmt.Println(id)
+
+	info := map[string]interface{}{}
+	for k, v := range r.PostForm {
+		fmt.Println(k, "value is", v)
+		if err := json.Unmarshal([]byte(k), &info); err != nil {
+			panic(err)
+		}
+	}
+
+	//channel := info["channel"]
+	c := info["isFile"].(bool)
 
 	//buscar archivos sin enviar
 	filesAux := make(map[string]string)
@@ -141,8 +152,12 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 		if found {
 			for k1, v1 := range channelsFile[k] { //recoriiendo todos los archivos
 				v2 := v1[id]
-				if !v2 {
+				fmt.Println("archivo:", k1, "-Usuarios:", v1)
+				if c {
 					filesAux[k1] = k
+				} else if !v2 {
+					filesAux[k1] = k
+					v1[id] = true
 				}
 			}
 		}
@@ -160,16 +175,6 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Fprintf(w, filesAux)
 	return
-}
-func subscription(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	r.ParseForm()
-	for k, v := range r.Form {
-		fmt.Printf("%s = %s\n", k, v)
-		var info Info
-		json.Unmarshal([]byte(k), &info)
-		fmt.Printf(info.idUser)
-	}
 }
 func subscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
